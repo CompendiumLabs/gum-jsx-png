@@ -6,13 +6,13 @@ and has no dependency on the layout core. Gum's text is already represented by
 glyph paths in that SVG, so rasterization needs no font registry or font files.
 
 ```ts
-import { rasterize_svg, rasterize_pixels } from 'gum-next-png';
+import { rasterize_svg, rasterize_pixels } from 'gum-next-png'
 
 const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" '
-  + 'viewBox="0 0 80 40"><path d="M0 0H40V40H0Z" fill="red"/></svg>';
+  + 'viewBox="0 0 80 40"><path d="M0 0H40V40H0Z" fill="red"/></svg>'
 
-const png = rasterize_svg(svg, { ratio: 2 }); // PNG Buffer, 160 by 80 pixels
-const rgba = rasterize_pixels(svg, { background: 'white' }); // canvas ImageData
+const png = rasterize_svg(svg, { ratio: 2 }) // PNG Buffer, 160 by 80 pixels
+const rgba = rasterize_pixels(svg, { background: 'white' }) // canvas ImageData
 ```
 
 Both functions accept a string or `Buffer` and the same optional settings:
