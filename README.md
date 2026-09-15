@@ -1,4 +1,4 @@
-# gum-next-png
+# gum-jsx-png
 
 SVG-to-PNG and SVG-to-RGBA rendering through `node-canvas`, adapted from
 `gum-org/gum-jsx-node/src/render.ts`. This package accepts completed SVG markup
@@ -6,7 +6,7 @@ and has no dependency on the layout core. Gum's text is already represented by
 glyph paths in that SVG, so rasterization needs no font registry or font files.
 
 ```ts
-import { rasterize_svg, rasterize_pixels } from 'gum-next-png'
+import { rasterize_svg, rasterize_pixels } from 'gum-jsx-png'
 
 const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" '
   + 'viewBox="0 0 80 40"><path d="M0 0H40V40H0Z" fill="red"/></svg>'
