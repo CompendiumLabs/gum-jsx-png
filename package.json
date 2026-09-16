@@ -1,6 +1,5 @@
 {
   "name": "@gum-jsx/png",
-  "version": "0.1.0",
   "description": "SVG rasterization for gum-jsx using node-canvas.",
   "type": "module",
   "module": "src/index.ts",
