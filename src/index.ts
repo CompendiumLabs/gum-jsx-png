@@ -1,2 +1,2 @@
 export { rasterize_svg, rasterize_pixels } from './render'
-export type { RasterizeOptions, RasterSize } from './render'
+export type { RasterizeOptions, RasterSize, RasterSelection } from './render'

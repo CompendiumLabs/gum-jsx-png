@@ -1,10 +1,12 @@
 // Adapted from gum-org/gum-jsx-node's node-canvas rasterizer.
 import { createCanvas, Image } from 'canvas'
 import type { Canvas, CanvasRenderingContext2D, ImageData } from 'canvas'
+import { select_svg, validate_selection } from './selection'
+import type { RasterSelection, RasterSize } from './selection'
 
-type RasterSize = Readonly<{ width: number; height: number }>
 type RasterizeOptions = Readonly<{
   size?: RasterSize
+  select?: RasterSelection
   ratio?: number
   background?: string
 }>
@@ -20,8 +22,9 @@ function positive(value: number, name: string): number {
 // The caller can supply the layout size to retain fractional viewport dimensions.
 // Canvas reports an SVG image's intrinsic dimensions as whole pixels.
 function draw_svg(svg: string | Buffer, options: RasterizeOptions = {}): Raster {
-  const { size, background, ratio = 1 } = options
+  const { size, select, background, ratio = 1 } = options
   positive(ratio, 'ratio')
+  if (select) validate_selection(select)
   if (size) {
     positive(size.width, 'width')
     positive(size.height, 'height')
@@ -29,8 +32,10 @@ function draw_svg(svg: string | Buffer, options: RasterizeOptions = {}): Raster 
 
   const image = new Image()
   image.src = Buffer.isBuffer(svg) ? svg : Buffer.from(svg)
-  const width = Math.ceil(positive((size?.width ?? image.width) * ratio, 'raster width'))
-  const height = Math.ceil(positive((size?.height ?? image.height) * ratio, 'raster height'))
+  const viewport = size ?? { width: image.width, height: image.height }
+  if (select) image.src = Buffer.from(select_svg(svg.toString(), select, viewport))
+  const width = Math.ceil(positive((select?.width ?? viewport.width) * ratio, 'raster width'))
+  const height = Math.ceil(positive((select?.height ?? viewport.height) * ratio, 'raster height'))
   if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height)) {
     throw new RangeError('Raster dimensions must be safe integers')
   }
@@ -60,4 +65,4 @@ function rasterize_pixels(svg: string | Buffer, options: RasterizeOptions = {}):
 }
 
 export { rasterize_svg, rasterize_pixels }
-export type { RasterizeOptions, RasterSize }
+export type { RasterizeOptions, RasterSize, RasterSelection }

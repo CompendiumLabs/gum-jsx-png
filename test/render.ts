@@ -43,6 +43,38 @@ assert.equal(smaller.width, 4)
 assert.equal(smaller.height, 2)
 console.log('ok - raster sizing preserves fractional dimensions and samples SVG paths at final resolution')
 
+const crop = { x: 3, y: 1, width: 2, height: 2 }
+const cropped = rasterize_pixels(svg, { select: crop, ratio: 2 })
+assert.equal(cropped.width, 4)
+assert.equal(cropped.height, 4)
+assert.deepEqual([...cropped.data.subarray(0, 12)],
+  [255, 0, 0, 255, 255, 0, 0, 255, 0, 0, 0, 0])
+const cropPng = rasterize_svg(Buffer.from(svg), { select: crop, ratio: 2 })
+decoded.src = cropPng
+const cropCanvas = createCanvas(4, 4)
+cropCanvas.getContext('2d').drawImage(decoded, 0, 0)
+assert.deepEqual(cropCanvas.getContext('2d').getImageData(0, 0, 4, 4).data, cropped.data)
+
+const zoomedEdge = rasterize_pixels(edge, { select: { x: 0.25, y: 0.5, width: 1, height: 1 }, ratio: 4 })
+assert.deepEqual([...zoomedEdge.data.subarray(0, 8)], [255, 0, 0, 255, 0, 0, 0, 0])
+const padded = rasterize_pixels(svg, { select: { x: -1, y: -1, width: 2, height: 2 }, background: 'blue' })
+assert.deepEqual([...padded.data.subarray(0, 4)], [0, 0, 255, 255])
+assert.deepEqual([...padded.data.subarray(12, 16)], [255, 0, 0, 255])
+const outside = rasterize_pixels(svg, { select: { x: 100, y: 100, width: 1, height: 1 } })
+assert.deepEqual([...outside.data], [0, 0, 0, 0])
+const viewBox = svg.replace('viewBox="0 0 8 4"', 'viewBox="0 0 16 8"')
+const mapped = rasterize_pixels(viewBox, { select: { x: 1, y: 0, width: 2, height: 1 } })
+assert.deepEqual([...mapped.data], [255, 0, 0, 255, 0, 0, 0, 0])
+const fractionalCrop = rasterize_svg(svg, { select: { x: 0, y: 0, width: 1.25, height: 2.25 }, ratio: 2 })
+assert.equal(fractionalCrop.readUInt32BE(16), 3)
+assert.equal(fractionalCrop.readUInt32BE(20), 5)
+console.log('ok - pixel selections crop before sampling, preserve viewBox mapping, and pad outside the image')
+
+for (const select of [
+  { ...crop, x: NaN }, { ...crop, y: Infinity },
+  ...[0, -1, NaN, Infinity].flatMap(value => [{ ...crop, width: value }, { ...crop, height: value }]),
+]) assert.throws(() => rasterize_svg(svg, { select }), /Selection/)
+
 for (const ratio of [0, -1, NaN, Infinity]) {
   assert.throws(() => rasterize_svg(svg, { ratio }), /ratio must be positive and finite/)
 }
