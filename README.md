@@ -5,7 +5,7 @@ completed SVG markup and has no dependency on Gum's layout core. It runs in a
 native Bun host; the separate selection helper also works in browsers.
 
 See the [Gum project](https://github.com/CompendiumLabs/gum-jsx#readme) for
-workspace setup and the package overview.
+getting started and the package overview.
 
 ## Usage
 
@@ -52,17 +52,16 @@ PNG requires positive dimensions, even though SVG and layout inspection support
 zero-sized viewports. Invalid image data and nonpositive or nonfinite dimensions
 throw errors.
 
-## Setup and development
+## Runtime requirements
 
-From the parent workspace, run `bun install` to install dependencies and link the
-packages. Node-canvas includes a native binding; this package declares `canvas` as a trusted
-install dependency. SVG rendering requires a node-canvas build
-with SVG support. There is no separate `rsvg-convert` command to install.
+SVG rendering requires node-canvas with its native binding and SVG support.
 
 Ordinary Gum text is already outlined in SVG and needs no font registration.
 Emoji and other live SVG text depend on fonts available to node-canvas.
 
-Run `bun run test` and `bun run typecheck` here. The tests check PNG encoding,
-RGBA paint and transparency, backgrounds, fractional dimensions, invalid inputs,
+## Development
+
+Run `bun run test` and `bun run typecheck` from this package directory. The tests
+check PNG encoding, RGBA paint and transparency, backgrounds, fractional dimensions, invalid inputs,
 and path sampling at the requested resolution. The CLI uses this package for
-`bun run gum file.jsx -o output.png --ratio 2` from the workspace root.
+`bun run gum file.jsx -o output.png --ratio 2`.
