@@ -64,4 +64,4 @@ Emoji and other live SVG text depend on fonts available to node-canvas.
 Run `bun run test` and `bun run typecheck` from this package directory. The tests
 check PNG encoding, RGBA paint and transparency, backgrounds, fractional dimensions, invalid inputs,
 and path sampling at the requested resolution. The CLI uses this package for
-`bun run gum file.jsx -o output.png --ratio 2`.
+`gum file.jsx -o output.png --ratio 2`.
