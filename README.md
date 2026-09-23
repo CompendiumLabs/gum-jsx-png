@@ -54,7 +54,9 @@ throw errors.
 
 ## Runtime requirements
 
+The 2.0 prerelease supports native rendering on Linux x64 with Bun 1.4.2 or newer.
 SVG rendering requires node-canvas with its native binding and SVG support.
+Native installation on macOS and Windows is outside this prerelease's verified scope.
 
 Ordinary Gum text is already outlined in SVG and needs no font registration.
 Emoji and other live SVG text depend on fonts available to node-canvas.
