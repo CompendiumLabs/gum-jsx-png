@@ -8,7 +8,6 @@
     ".": "./src/index.ts",
     "./selection": "./src/selection.ts"
   },
-  "private": true,
   "license": "MIT",
   "scripts": {
     "test": "bun test/render.ts",
@@ -23,5 +22,26 @@
   },
   "trustedDependencies": [
     "canvas"
+  ],
+  "version": "2.0.0-beta.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CompendiumLabs/gum-jsx-png.git"
+  },
+  "homepage": "https://github.com/CompendiumLabs/gum-jsx-png#readme",
+  "bugs": {
+    "url": "https://github.com/CompendiumLabs/gum-jsx-png/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "beta"
+  },
+  "engines": {
+    "bun": ">=1.4.2"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
   ]
 }
