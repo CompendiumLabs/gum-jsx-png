@@ -23,7 +23,7 @@
   "trustedDependencies": [
     "canvas"
   ],
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CompendiumLabs/gum-jsx-png.git"
