@@ -1,14 +1,18 @@
 // Adapted from gum-org/gum-jsx-node's node-canvas rasterizer.
-import { createCanvas, Image } from 'canvas'
-import type { Canvas, CanvasRenderingContext2D, ImageData } from 'canvas'
+import { createCanvas, Image, Canvas } from 'canvas'
+import type { CanvasRenderingContext2D, ImageData } from 'canvas'
 import { select_svg, validate_selection } from './selection'
 import type { RasterSelection, RasterSize } from './selection'
+import { svg_viewport } from './viewport'
 
+type PngEncoding = 'fast' | 'standard'
 type RasterizeOptions = Readonly<{
   size?: RasterSize
   select?: RasterSelection
   ratio?: number
   background?: string
+  /** Lossless PNG encoding; fast is level 3 without row filters. */
+  encoding?: PngEncoding
 }>
 type Raster = { canvas: Canvas; context: CanvasRenderingContext2D }
 
@@ -31,14 +35,24 @@ function draw_svg(svg: string | Buffer, options: RasterizeOptions = {}): Raster 
   }
 
   const image = new Image()
-  image.src = Buffer.isBuffer(svg) ? svg : Buffer.from(svg)
-  const viewport = size ?? { width: image.width, height: image.height }
-  if (select) image.src = Buffer.from(select_svg(svg.toString(), select, viewport))
+  const source = svg.toString()
+  const explicit = svg_viewport(source)
+  // Native loading rasterizes immediately. Resolve ordinary SVG dimensions from
+  // the root so we can load directly at the final resolution instead of repainting.
+  if (!explicit) image.src = Buffer.isBuffer(svg) ? svg : Buffer.from(svg)
+  const viewport = size ?? (explicit
+    ? { width: Math.trunc(explicit.width), height: Math.trunc(explicit.height) }
+    : { width: image.width, height: image.height })
   const width = Math.ceil(positive((select?.width ?? viewport.width) * ratio, 'raster width'))
   const height = Math.ceil(positive((select?.height ?? viewport.height) * ratio, 'raster height'))
   if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height)) {
     throw new RangeError('Raster dimensions must be safe integers')
   }
+
+  const selected = select ? select_svg(source, select, viewport) : source
+  const output = select ? svg_viewport(selected) : explicit
+  if (output) image.src = Buffer.from(output.resize(width, height))
+  else if (select) image.src = Buffer.from(selected)
 
   const canvas = createCanvas(width, height)
   const context = canvas.getContext('2d')
@@ -56,7 +70,10 @@ function draw_svg(svg: string | Buffer, options: RasterizeOptions = {}): Raster 
 }
 
 function rasterize_svg(svg: string | Buffer, options: RasterizeOptions = {}): Buffer {
-  return draw_svg(svg, options).canvas.toBuffer('image/png')
+  const encoding = options.encoding ?? 'fast'
+  if (encoding !== 'fast' && encoding !== 'standard') throw new TypeError('PNG encoding must be fast or standard')
+  return draw_svg(svg, options).canvas.toBuffer('image/png', encoding === 'fast'
+    ? { compressionLevel: 3, filters: Canvas.PNG_FILTER_NONE } : undefined)
 }
 
 function rasterize_pixels(svg: string | Buffer, options: RasterizeOptions = {}): ImageData {
@@ -65,4 +82,4 @@ function rasterize_pixels(svg: string | Buffer, options: RasterizeOptions = {}):
 }
 
 export { rasterize_svg, rasterize_pixels }
-export type { RasterizeOptions, RasterSize, RasterSelection }
+export type { PngEncoding, RasterizeOptions, RasterSize, RasterSelection }

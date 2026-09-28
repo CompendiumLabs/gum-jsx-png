@@ -21,6 +21,7 @@ const detail = rasterize_svg(svg, {
   select: { x: 20, y: 10, width: 30, height: 20 },
   ratio: 4,
 }) // Selected region, 120 by 80 pixels
+const standard = rasterize_svg(svg, { encoding: 'standard' }) // Previous PNG compression policy
 ```
 
 Both functions accept a string or `Buffer` and the same optional settings:
@@ -31,11 +32,22 @@ Both functions accept a string or `Buffer` and the same optional settings:
 | `select: { x, y, width, height }` | Crop in source-image pixels from the top-left, before applying `ratio`. Output dimensions come from the selection when supplied. |
 | `ratio` | Positive sampling multiplier, default `1`. Each output dimension is rounded up to a whole pixel. |
 | `background` | Canvas fill behind the SVG; transparent by default. |
+| `encoding` | PNG only: `'fast'` (default) uses compression level 3 without row filters; `'standard'` uses node-canvas's level 6 and adaptive filters. Both preserve every decoded pixel. |
 
 Node-canvas reports intrinsic image dimensions as whole pixels. When rendering
 a Gum fragment, pass `size: fragment.size` to retain its fractional viewport
 dimensions before applying `ratio`. This changes raster sampling and never runs
 layout. The SVG paths are rendered at the final resolution.
+
+Explicit viewports with a `viewBox` are loaded at their final raster dimensions,
+avoiding a second native render after loading. CSS-controlled sizing, XML
+preambles, and SVGs without an explicit viewBox use the native sizing path.
+Cropping also prepares the final viewport before loading when possible.
+
+Fast encoding reduces compression work. File size depends on the image: a fast
+PNG can be larger or smaller than standard encoding. Use `encoding: 'standard'`
+to retain the previous compression policy. `rasterize_pixels` skips PNG encoding
+and ignores this setting. The `PngEncoding` type is exported for callers.
 
 Selection coordinates describe the rendered SVG viewport, not its `viewBox`
 units. Fractional and negative positions are allowed; selection dimensions must
