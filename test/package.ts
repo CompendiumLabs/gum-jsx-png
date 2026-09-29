@@ -41,9 +41,11 @@ console.log(run(['node', '--no-addons', 'smoke.mjs'], consumer).trim())
 console.log(run(['bun', '--no-addons', 'smoke.mjs'], consumer).trim())
 // Root declarations must resolve without native package types.
 await writeFile(join(consumer, 'types.ts'), `import {render_png, render_pixels} from '@gum-jsx/png';
+import type {RasterSelection} from '@gum-jsx/png';
 import type {Fragment} from '@gum-jsx/core';
 declare const fragment: Fragment;
-const bytes: Uint8Array = render_png(fragment);
+const select: RasterSelection = {x: 0, y: 0, width: 4, height: 2};
+const bytes: Uint8Array = render_png(fragment, {select});
 const rgba: Uint8ClampedArray = render_pixels(fragment).data;
 `)
 console.log(run([join(root, 'node_modules/.bin/tsc'), '--noEmit', '--skipLibCheck', '--strict',

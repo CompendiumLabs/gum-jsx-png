@@ -67,16 +67,15 @@ The current implementation has these limits:
 See [WASM implementation and measurements](docs/WASM.md) for the initial
 performance results and remaining portability and performance work.
 
-## SVG and selection
+## SVG input
 
 The former `rasterize_svg`, `rasterize_pixels`, and `/svg` entry point have been
 removed. Pass a completed Gum `Fragment` to `render_png` or `render_pixels`.
 Live text and emoji without outlines are unsupported. Export those figures as
 SVG for a browser or another renderer with suitable fonts.
 
-Browser applications can still import `select_svg(svg, select, viewport)` and
-`RasterSelection` from `@gum-jsx/png/selection` to wrap SVG markup in a cropped
-viewport. This helper does not rasterize the SVG or load a native dependency.
+For cropped PNG or RGBA output, pass `select` to the fragment renderer.
+The `RasterSelection` type is exported from the root and `/fragment` entries.
 
 PNG requires positive dimensions, even though SVG and layout inspection support
 zero-sized viewports. Invalid image data and nonpositive or nonfinite dimensions

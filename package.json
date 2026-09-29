@@ -13,10 +13,6 @@
     "./fragment": {
       "types": "./dist/fragment.d.ts",
       "default": "./dist/fragment.js"
-    },
-    "./selection": {
-      "types": "./dist/selection.d.ts",
-      "default": "./dist/selection.js"
     }
   },
   "license": "MIT",

@@ -2,11 +2,10 @@ import type { Drawing, Fragment, PathCommand, Transform } from '@gum-jsx/core'
 import { parse_color } from './color'
 import type { Color } from './color'
 import { rect_path, ellipse_path } from './paths'
-import { validate_selection } from './selection'
-import type { RasterSelection } from './selection'
 import { render_commands } from './wasm'
 
 type PngEncoding = 'fast' | 'standard'
+type RasterSelection = Readonly<{ x: number; y: number; width: number; height: number }>
 type FragmentRasterOptions = Readonly<{
   ratio?: number
   select?: RasterSelection
@@ -50,6 +49,16 @@ class Commands {
 function positive(value: number, name: string): number {
   if (!Number.isFinite(value) || value <= 0) throw new RangeError(`${name} must be positive and finite`)
   return value
+}
+
+function validate_selection(select: RasterSelection): void {
+  if (!Number.isFinite(select.x) || !Number.isFinite(select.y)) {
+    throw new RangeError('Selection x and y must be finite')
+  }
+  if (!Number.isFinite(select.width) || select.width <= 0
+    || !Number.isFinite(select.height) || select.height <= 0) {
+    throw new RangeError('Selection width and height must be positive and finite')
+  }
 }
 
 function prepare(fragment: Fragment, options: FragmentRasterOptions): { commands: Uint8Array; width: number; height: number } {
