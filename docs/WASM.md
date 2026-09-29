@@ -49,6 +49,42 @@ is approximately 316 KiB, including JS, declarations, documentation, and license
 Run `bun run perf` for current WASM samples and rendered files in `out/perf/`.
 The canvas figures above are historical and are no longer measured by the script.
 
+## Startup and buffer improvements
+
+Base64 decoding now uses `Uint8Array.fromBase64` where available, with a direct
+byte loop for older runtimes. This applies to both the WASM payload and embedded
+PNG images. RGBA conversion reuses the Rust pixmap's allocation and skips alpha
+conversion for transparent and opaque pixels. Partial alpha retains tiny-skia's
+rounding. The map below avoids an extra 8.4 MB pixel buffer in Rust; copying the
+finished result into a caller-owned JavaScript array is still necessary.
+
+Measured against the preceding renderer on Linux x64, Bun 1.4.2, Rust 1.98.1:
+
+| Case | Before | After |
+|---|---:|---:|
+| Text, first PNG call | 33.0 ms | 13.9 ms |
+| Silk Road, first PNG call | 227.4 ms | 205.7 ms |
+| Silk Road, warm PNG | 108.9 ms | 107.7 ms |
+| Embedded 512×256 PNG, first PNG call | 98.6 ms | 69.3 ms |
+| Embedded 512×256 PNG, warm PNG | 10.0 ms | 8.6 ms |
+
+Warm measurements use 21 samples after at least 10 calls and 250 ms of warmup
+per operation. First-call measurements use nine fresh Bun processes per backend.
+Backend order alternates. Both load built modules; layout and process startup
+are excluded. The embedded PNG is a generated RGB texture. These changes mainly
+help startup and images; warm vector rendering changes little.
+
+Pass a saved build to compare it with the current one:
+
+```sh
+bun run build
+bun run perf /path/to/previous/dist/render.js
+```
+
+The comparison also checks identical PNG bytes. Ten visual fixtures and all
+65,536 channel/alpha combinations were checked against the preceding renderer;
+RGBA and both PNG encodings matched exactly. The updated WASM is 619,213 bytes.
+
 ## Validation
 
 - Fragment tests cover decoded PNG/RGBA equivalence, straight alpha, crop

@@ -14,7 +14,7 @@ getting started and the package overview.
 
 ```ts
 import { LayoutPass, Text, px } from '@gum-jsx/core'
-import { render_png, render_pixels } from '@gum-jsx/png/fragment'
+import { render_png, render_pixels } from '@gum-jsx/png'
 
 const fragment = new LayoutPass().layout(
   new Text({ children: 'Hello, tiny-skia!', font_size: px(32) }),
@@ -24,10 +24,9 @@ const rgba = render_pixels(fragment) // { width, height, data: Uint8ClampedArray
 await Bun.write('hello.png', png)
 ```
 
-Both functions are also exported from `@gum-jsx/png`. In browsers, the package's
-root export selects the fragment API. The explicit `/fragment` entry works with
-bundlers and native browser ESM and never imports Node modules. To display the
-PNG, use `new Blob([png], { type: 'image/png' })` and an object URL.
+The package root selects the portable renderer in browsers and never imports
+Node modules. To display the PNG, use `new Blob([png], { type: 'image/png' })`
+and an object URL.
 
 The WASM payload is embedded in the published JavaScript. It is decoded and
 compiled on the first render, then reused. There is no fetch or asset-loader
@@ -75,7 +74,7 @@ Live text and emoji without outlines are unsupported. Export those figures as
 SVG for a browser or another renderer with suitable fonts.
 
 For cropped PNG or RGBA output, pass `select` to the fragment renderer.
-The `RasterSelection` type is exported from the root and `/fragment` entries.
+The `RasterSelection` type is exported from the package root.
 
 PNG requires positive dimensions, even though SVG and layout inspection support
 zero-sized viewports. Invalid image data and nonpositive or nonfinite dimensions

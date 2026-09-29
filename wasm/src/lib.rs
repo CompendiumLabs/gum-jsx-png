@@ -262,10 +262,17 @@ fn render(bytes: &[u8], format: u32) -> Result<Vec<u8>> {
     }
     // The public API and PNG both use straight alpha. tiny-skia stores
     // premultiplied channels internally; never expose those as ordinary RGBA.
-    let mut rgba = Vec::with_capacity(output.data().len());
-    for pixel in output.pixels() {
-        let color = pixel.demultiply();
-        rgba.extend_from_slice(&[color.red(), color.green(), color.blue(), color.alpha()]);
+    // Reuse the pixel allocation. Transparent and opaque premultiplied pixels
+    // already have the required values; only partial alpha needs conversion.
+    let mut rgba = output.take();
+    for pixel in rgba.chunks_exact_mut(4) {
+        if pixel[3] != 0 && pixel[3] != 255 {
+            // Match tiny-skia's demultiply rounding exactly.
+            let alpha = pixel[3] as f64 / 255.0;
+            for channel in &mut pixel[..3] {
+                *channel = (*channel as f64 / alpha + 0.5) as u8;
+            }
+        }
     }
     if format == 0 {
         return Ok(rgba);

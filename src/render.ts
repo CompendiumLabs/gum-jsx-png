@@ -3,6 +3,7 @@ import { parse_color } from './color'
 import type { Color } from './color'
 import { rect_path, ellipse_path } from './paths'
 import { render_commands } from './wasm'
+import { decode_base64 } from './base64'
 
 type PngEncoding = 'fast' | 'standard'
 type RasterSelection = Readonly<{ x: number; y: number; width: number; height: number }>
@@ -114,7 +115,7 @@ function prepare(fragment: Fragment, options: FragmentRasterOptions): { commands
       let image = images.get(draw.data)
       if (!image) {
         if (!draw.data.startsWith('data:image/png;base64,')) throw new TypeError('Fragment images require a base64 PNG data URL')
-        const bytes = Uint8Array.from(atob(draw.data.slice(22)), char => char.charCodeAt(0))
+        const bytes = decode_base64(draw.data.slice(22))
         if (bytes.length < 24) throw new TypeError('Invalid embedded PNG')
         const view = new DataView(bytes.buffer)
         image = { id: images.size, width: view.getUint32(16), height: view.getUint32(20) }

@@ -1,4 +1,5 @@
 import { wasm_base64 } from './generated/wasm'
+import { decode_base64 } from './base64'
 
 type Renderer = {
   memory: WebAssembly.Memory
@@ -14,7 +15,7 @@ let renderer: Renderer | undefined
 
 function instance(): Renderer {
   if (!renderer) {
-    const bytes = Uint8Array.from(atob(wasm_base64), char => char.charCodeAt(0))
+    const bytes = decode_base64(wasm_base64)
     renderer = new WebAssembly.Instance(new WebAssembly.Module(bytes)).exports as unknown as Renderer
   }
   return renderer

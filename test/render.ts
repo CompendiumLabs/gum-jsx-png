@@ -6,6 +6,20 @@ import type { Drawing, Fragment, Paint, PathCommand } from '@gum-jsx/core'
 import { createMathFonts, mathToElement } from '@gum-jsx/math'
 import { render_png, render_pixels } from '../src/render'
 import type { RasterPixels } from '../src/render'
+import { decode_base64 } from '../src/base64'
+
+const allBytes = Uint8Array.from({ length: 256 }, (_, index) => index)
+const encoded = Buffer.from(allBytes).toString('base64')
+assert.deepEqual(decode_base64(encoded), allBytes)
+const fromBase64 = Uint8Array.fromBase64
+try {
+  Object.defineProperty(Uint8Array, 'fromBase64', { configurable: true, writable: true, value: undefined })
+  assert.deepEqual(decode_base64(encoded), allBytes)
+} finally {
+  if (fromBase64 === undefined) Reflect.deleteProperty(Uint8Array, 'fromBase64')
+  else Object.defineProperty(Uint8Array, 'fromBase64', { configurable: true, writable: true, value: fromBase64 })
+}
+console.log('ok - native and fallback base64 decoding preserve all byte values')
 
 const style: Paint = { fill: 'red', stroke: 'none', stroke_width: 0 }
 const rect = (x: number, y: number, width: number, height: number, paint: Partial<Paint> = {}) =>
