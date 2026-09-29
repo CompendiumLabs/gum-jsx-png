@@ -9,10 +9,6 @@
       "browser": { "types": "./dist/render.d.ts", "default": "./dist/render.js" },
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./fragment": {
-      "types": "./dist/render.d.ts",
-      "default": "./dist/render.js"
     }
   },
   "license": "MIT",

@@ -197,5 +197,5 @@ function render_pixels(fragment: Fragment, options: FragmentRasterOptions = {}):
   return { width, height, data: new Uint8ClampedArray(bytes.buffer, bytes.byteOffset, bytes.byteLength) }
 }
 
-export { render_png, render_pixels }
+export { render_png, render_pixels, validate_selection }
 export type { FragmentRasterOptions, RasterPixels, PngEncoding, RasterSelection }
