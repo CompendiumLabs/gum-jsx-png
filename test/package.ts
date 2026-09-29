@@ -17,8 +17,12 @@ function run(args: string[], cwd = root): string {
 run(['bun', 'run', 'build'])
 const packed = JSON.parse(run(['npm', 'pack', '--ignore-scripts', '--pack-destination', directory, '--json']))
 const metadata = (Array.isArray(packed) ? packed[0] : Object.values(packed)[0]) as { filename: string; size: number }
+// Pack the matching core candidate too: its version may not be public yet.
+const corePacked = JSON.parse(run(['npm', 'pack', '--ignore-scripts', '--pack-destination', directory, '--json'], join(root, '../gum-jsx-core')))
+const coreMetadata = (Array.isArray(corePacked) ? corePacked[0] : Object.values(corePacked)[0]) as { filename: string }
 await writeFile(join(consumer, 'package.json'), '{"name":"gum-png-consumer","private":true,"type":"module"}\n')
-run(['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund', join(directory, metadata.filename)], consumer)
+run(['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund',
+  join(directory, coreMetadata.filename), join(directory, metadata.filename)], consumer)
 const lock = JSON.parse(await readFile(join(consumer, 'package-lock.json'), 'utf8'))
 assert.ok(!Object.keys(lock.packages).some(path => path.endsWith('/canvas')), 'Fresh fragment installs must not install canvas')
 const smoke = `
