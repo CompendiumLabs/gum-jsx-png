@@ -17,6 +17,12 @@ type RasterPixels = Readonly<{ width: number; height: number; data: Uint8Clamped
 const IDENTITY: Transform = [1, 0, 0, 1, 0, 0]
 const MAX_PIXELS = 16_777_216
 
+/** Whether a fragment needs host-font rendering (including live emoji). */
+function has_live_text(fragment: Fragment): boolean {
+  return fragment.draw.some(draw => draw.kind === 'text')
+    || fragment.children.some(child => has_live_text(child.fragment))
+}
+
 function multiply(left: Transform, right: Transform): Transform {
   const [a, b, c, d, e, f] = left, [g, h, i, j, k, l] = right
   return [a * g + c * h, b * g + d * h, a * i + c * j, b * i + d * j,
@@ -187,5 +193,5 @@ function render_pixels(fragment: Fragment, options: FragmentRasterOptions = {}):
   return { width, height, data: new Uint8ClampedArray(bytes.buffer, bytes.byteOffset, bytes.byteLength) }
 }
 
-export { render_png, render_pixels }
+export { render_png, render_pixels, has_live_text }
 export type { FragmentRasterOptions, RasterPixels, PngEncoding, RasterSelection }

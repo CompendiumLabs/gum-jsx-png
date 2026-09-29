@@ -22,7 +22,8 @@ function native_canvas(): typeof import('canvas') {
   if (!native) {
     try { native = require('canvas') } catch (cause) {
       throw new Error('SVG rasterization requires the optional canvas package and its native binding. '
-        + 'For Gum fragments, use render_png or render_pixels without canvas.', { cause })
+        + 'Install canvas and allow its native install script for live text, emoji, or external SVG. '
+        + 'Outlined Gum text and shapes render without canvas.', { cause })
     }
   }
   return native!

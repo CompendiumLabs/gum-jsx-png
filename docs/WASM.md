@@ -4,7 +4,9 @@ The experimental backend consumes completed `Fragment` trees. TypeScript walks
 the tree, combines affine placements, normalizes shapes to paths, parses colors,
 and writes one binary command buffer. Rust executes that buffer with tiny-skia
 0.12.0 and encodes PNG with the `png` crate. Neither side performs layout or
-font loading. The SVG/canvas backend remains available for comparison.
+font loading. CLI PNG/kitty output, Markdown figures/math, and MCP rasterization
+now pass fragments directly. The SVG/canvas backend remains an optional fallback
+for live text and emoji, and for external SVG images in Markdown.
 
 The protocol defines paths and embedded PNGs once, then refers to them by index.
 Clip push/pop operations scope masks to the correct subtree. Rust owns input
@@ -39,8 +41,8 @@ timings, not total CLI latency. Layout is excluded in both cases.
 The warm SVG serialization plus canvas PNG path measured 149.4 ms for Silk Road,
 versus 108.7 ms for direct fragment PNG. The first render is slower with this
 WASM build; repeated rendering benefits from the initialized renderer. This
-tradeoff matters for single-shot CLI use and should be rechecked before switching
-the CLI's default. The two encoders use different fast-compression policies.
+tradeoff matters for single-shot CLI use; full CLI startup and memory still need
+cross-platform measurement. The two encoders use different fast-compression policies.
 
 The initial WASM artifact is 620,351 bytes (606 KiB); the compressed npm package
 is approximately 316 KiB, including JS, declarations, documentation, and licenses.
@@ -60,21 +62,21 @@ Run `bun run perf` to regenerate samples and rendered files in `out/perf/`.
   package. Node and Bun render it successfully with `--no-addons`, and its
   portable TypeScript declarations resolve in the consumer.
 - A browser ESM check renders RGBA and successfully decodes the generated PNG.
+- The workspace's `bun run test:png-package` packs CLI, MCP, and their local
+  dependencies, installs them through npm with `--ignore-scripts`, checks that
+  canvas is absent, and exercises PNG/kitty, Markdown math/figures, and MCP tools
+  with `--no-addons`. Live text and emoji report the missing optional backend.
 - Existing SVG/canvas regression tests still pass.
-- Workspace type checks pass. The full workspace test run has one existing CLI
-  failure: its live-text test expects math to remain paths, but current core/math
-  emits live math text. The same assertion fails with the original PNG renderer;
-  this branch does not change that behavior.
+- CLI checks cover crop/background pixels, fractional viewports, encoding,
+  PNG/kitty agreement, native fallback, and missing-canvas errors. Its live-text
+  expectations follow core/math's live glyph behavior; PDF remains outlined.
 
-## Follow-up before replacing the CLI backend
+## Remaining work
 
-1. Measure full CLI startup on supported platforms, including Node and Bun;
+1. Measure full CLI startup and memory on supported platforms with Bun;
    investigate cold WASM performance and optional SIMD builds if justified.
-2. Decide how the CLI handles live text and color emoji. The fragment backend
-   currently throws for them, as the PDF exporter does.
+2. Verify fresh CLI installations on macOS and Windows. Linux x64 is checked.
 3. Bound temporary opacity surfaces to drawing extents and reduce full-frame
    clip-mask allocation for large or deeply clipped figures.
 4. Verify image minification and color expectations on real documents. Bilinear
    sampling and 8-bit sRGB-like samples are the current scope; profiles are ignored.
-5. Update CLI callers to pass fragments directly, and test the resulting fresh
-   CLI install without canvas. Its current callers still use SVG rasterization.

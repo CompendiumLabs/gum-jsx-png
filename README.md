@@ -5,8 +5,8 @@ WebAssembly. The fragment renderer works in Bun, Node, and browsers without
 native addons, install scripts, host fonts, or a Rust installation.
 
 SVG-string rendering remains available through the optional `canvas` package.
-The CLI currently uses that SVG API; this branch adds the fragment backend for
-evaluation before switching CLI rendering.
+CLI PNG/kitty output, Markdown figures/math, and MCP rasterization use fragments
+directly. Figures containing live text or emoji use the optional SVG backend.
 
 See the [Gum project](https://github.com/CompendiumLabs/gum-jsx#readme) for
 getting started and the package overview.
@@ -66,7 +66,11 @@ The current implementation has these limits:
   tiny-skia as float32; exceptionally large coordinates can lose precision.
 
 See [WASM implementation and measurements](docs/WASM.md) for the initial
-performance results and the remaining work before a CLI switch.
+performance results and remaining portability and performance work.
+
+`has_live_text(fragment)` is exported alongside the fragment renderers. It checks
+the whole tree for live text drawings, including emoji, so host applications can
+choose the optional SVG backend before attempting a render.
 
 ## SVG rendering
 
