@@ -1,13 +1,12 @@
 import { fileURLToPath } from 'node:url'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile, writeFile, rm } from 'node:fs/promises'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 // Normal JS builds use the checked-in WASM artifact and need no Rust toolchain.
-for (const [target, names] of [['node', ['render']], ['browser', ['fragment', 'selection']]] as const) {
-  const result = await Bun.build({ entrypoints: names.map(name => `${root}src/${name}.ts`),
-    outdir: `${root}dist`, target, format: 'esm', packages: 'external' })
-  if (!result.success) throw new AggregateError(result.logs, 'PNG package build failed')
-}
+await rm(`${root}dist`, { recursive: true, force: true })
+const result = await Bun.build({ entrypoints: ['fragment', 'selection'].map(name => `${root}src/${name}.ts`),
+  outdir: `${root}dist`, target: 'browser', format: 'esm', packages: 'external' })
+if (!result.success) throw new AggregateError(result.logs, 'PNG package build failed')
 // Preserve the re-exports so the main and browser entry points share one WASM
 // payload and one initialized instance, even when both are imported together.
 await writeFile(`${root}dist/index.js`, new Bun.Transpiler({ loader: 'ts' })

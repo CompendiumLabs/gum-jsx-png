@@ -5,8 +5,8 @@ the tree, combines affine placements, normalizes shapes to paths, parses colors,
 and writes one binary command buffer. Rust executes that buffer with tiny-skia
 0.12.0 and encodes PNG with the `png` crate. Neither side performs layout or
 font loading. CLI PNG/kitty output, Markdown figures/math, and MCP rasterization
-now pass fragments directly. The SVG/canvas backend remains an optional fallback
-for live text and emoji, and for external SVG images in Markdown.
+now pass fragments directly. The native SVG backend has been removed. Live text,
+emoji without outlines, and external SVG images are unsupported by this backend.
 
 The protocol defines paths and embedded PNGs once, then refers to them by index.
 Clip push/pop operations scope masks to the correct subtree. Rust owns input
@@ -20,7 +20,7 @@ The Node root entry re-exports the same portable module, so importing both entry
 points shares the compiled instance. The module has no host imports or WASI
 dependency. Rust and Cargo run only when rebuilding that artifact.
 
-## Initial measurements
+## Historical comparison before removing canvas
 
 Measured on Linux x64 with Bun 1.4.2 and Rust 1.98.1. The baseline uses
 node-canvas 3.2.3. Warm results are medians of nine samples after one warmup,
@@ -46,7 +46,8 @@ cross-platform measurement. The two encoders use different fast-compression poli
 
 The initial WASM artifact is 620,351 bytes (606 KiB); the compressed npm package
 is approximately 316 KiB, including JS, declarations, documentation, and licenses.
-Run `bun run perf` to regenerate samples and rendered files in `out/perf/`.
+Run `bun run perf` for current WASM samples and rendered files in `out/perf/`.
+The canvas figures above are historical and are no longer measured by the script.
 
 ## Validation
 
@@ -57,7 +58,9 @@ Run `bun run perf` to regenerate samples and rendered files in `out/perf/`.
   opacity, transformed images, and text/math. At 2×, mean RGB error versus
   node-canvas was 0.004–0.440 out of 255; at most 0.32% of pixels differed by
   more than 32 in any RGB channel. This allows different edge antialiasing while
-  checking geometry and interior colors. Artifacts are in `out/visual/`.
+  checking geometry and interior colors. The original references are checked in
+  under `test/reference/`; the tests need no native renderer. Artifacts are in
+  `out/visual/`.
 - A fresh npm tarball installation with `--ignore-scripts` has no `canvas`
   package. Node and Bun render it successfully with `--no-addons`, and its
   portable TypeScript declarations resolve in the consumer.
@@ -65,10 +68,10 @@ Run `bun run perf` to regenerate samples and rendered files in `out/perf/`.
 - The workspace's `bun run test:png-package` packs CLI, MCP, and their local
   dependencies, installs them through npm with `--ignore-scripts`, checks that
   canvas is absent, and exercises PNG/kitty, Markdown math/figures, and MCP tools
-  with `--no-addons`. Live text and emoji report the missing optional backend.
-- Existing SVG/canvas regression tests still pass.
+  with `--no-addons`. CLI raster output always outlines text; emoji report an
+  unsupported-input error.
 - CLI checks cover crop/background pixels, fractional viewports, encoding,
-  PNG/kitty agreement, native fallback, and missing-canvas errors. Its live-text
+  PNG/kitty agreement, outlined text modes, and unsupported emoji errors. Its live-text
   expectations follow core/math's live glyph behavior; PDF remains outlined.
 
 ## Remaining work

@@ -1,6 +1,6 @@
 {
   "name": "@gum-jsx/png",
-  "description": "Gum fragment rasterization with tiny-skia WebAssembly, plus optional SVG rendering.",
+  "description": "Gum fragment rasterization with tiny-skia WebAssembly.",
   "type": "module",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,10 +14,6 @@
       "types": "./dist/fragment.d.ts",
       "default": "./dist/fragment.js"
     },
-    "./svg": {
-      "types": "./dist/render.d.ts",
-      "default": "./dist/render.js"
-    },
     "./selection": {
       "types": "./dist/selection.d.ts",
       "default": "./dist/selection.js"
@@ -28,7 +24,7 @@
     "build": "bun scripts/build.ts",
     "build:wasm": "bun scripts/build-wasm.ts",
     "prepack": "bun run build",
-    "test": "bun test/fragment.ts && bun test/render.ts",
+    "test": "bun test/fragment.ts && bun test/visual.ts",
     "test:visual": "bun test/visual.ts",
     "test:package": "bun test/package.ts",
     "test:browser": "bun test/browser.ts",
@@ -41,18 +37,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@gum-jsx/math": "2.0.0-beta.2",
-    "canvas": "^3.2.3",
     "fast-png": "^8.0.0",
     "typescript": "^7"
-  },
-  "trustedDependencies": [
-    "canvas"
-  ],
-  "peerDependencies": {
-    "canvas": "^3.2.3"
-  },
-  "peerDependenciesMeta": {
-    "canvas": { "optional": true }
   },
   "version": "2.0.0-beta.2",
   "repository": {

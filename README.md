@@ -4,9 +4,8 @@ Render completed Gum fragments directly to PNG or RGBA through tiny-skia
 WebAssembly. The fragment renderer works in Bun, Node, and browsers without
 native addons, install scripts, host fonts, or a Rust installation.
 
-SVG-string rendering remains available through the optional `canvas` package.
 CLI PNG/kitty output, Markdown figures/math, and MCP rasterization use fragments
-directly. Figures containing live text or emoji use the optional SVG backend.
+directly. This branch has no SVG-string rasterizer or native canvas dependency.
 
 See the [Gum project](https://github.com/CompendiumLabs/gum-jsx#readme) for
 getting started and the package overview.
@@ -41,7 +40,7 @@ addition to their existing script policy.
 | `ratio` | Positive sampling multiplier, default `1`. Output dimensions are rounded up; geometry is scaled by exactly this ratio. |
 | `select: { x, y, width, height }` | Crop in fragment coordinates before sampling; areas outside the original viewport remain transparent or show the background. |
 | `background` | Solid CSS color behind the fragment, transparent by default. |
-| `encoding` | PNG only: `'fast'` (default) or `'standard'`, using the Rust PNG encoder's fast or balanced compression. Both encode identical pixels. These presets do not reproduce node-canvas's PNG bytes. |
+| `encoding` | PNG only: `'fast'` (default) or `'standard'`, using the Rust PNG encoder's fast or balanced compression. Both encode identical pixels. |
 
 Supported drawing features include rectangles and individually rounded corners,
 ellipses, `M/L/Q/C/Z` paths, nonzero fills, dashed strokes, caps and joins, affine
@@ -52,8 +51,8 @@ Shared path and image data are transferred to WASM once per render.
 
 The current implementation has these limits:
 
-- Live text and color emoji require host fonts and throw a descriptive error.
-  Use outlined text for the fragment renderer.
+- Live text and emoji without outlines throw a descriptive error. Use outlined
+  text, or export SVG for a browser with suitable fonts.
 - Colors support CSS names, hex, numeric RGB/HSL, `transparent`, and `none`.
   CSS variables, `currentColor`, gradients, and other paint expressions throw.
 - Images use bilinear sampling and 8-bit premultiplied RGBA internally. PNG
@@ -68,73 +67,16 @@ The current implementation has these limits:
 See [WASM implementation and measurements](docs/WASM.md) for the initial
 performance results and remaining portability and performance work.
 
-`has_live_text(fragment)` is exported alongside the fragment renderers. It checks
-the whole tree for live text drawings, including emoji, so host applications can
-choose the optional SVG backend before attempting a render.
+## SVG and selection
 
-## SVG rendering
+The former `rasterize_svg`, `rasterize_pixels`, and `/svg` entry point have been
+removed. Pass a completed Gum `Fragment` to `render_png` or `render_pixels`.
+Live text and emoji without outlines are unsupported. Export those figures as
+SVG for a browser or another renderer with suitable fonts.
 
-Install `canvas` when using the SVG API. With npm 12, approve its native install
-script from the consuming project, then rebuild it:
-
-```sh
-npm install canvas
-npm approve-scripts canvas
-npm rebuild canvas --foreground-scripts
-```
-
-These steps are unnecessary for the fragment API.
-
-```ts
-import { rasterize_svg, rasterize_pixels } from '@gum-jsx/png'
-
-const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" '
-  + 'viewBox="0 0 80 40"><path d="M0 0H40V40H0Z" fill="red"/></svg>'
-
-const png = rasterize_svg(svg, { ratio: 2 }) // PNG Buffer, 160 by 80 pixels
-const rgba = rasterize_pixels(svg, { background: 'white' }) // { width, height, data }
-const detail = rasterize_svg(svg, {
-  select: { x: 20, y: 10, width: 30, height: 20 },
-  ratio: 4,
-}) // Selected region, 120 by 80 pixels
-const standard = rasterize_svg(svg, { encoding: 'standard' }) // Previous PNG compression policy
-```
-
-Both functions accept a string or `Buffer` and the same optional settings:
-
-| Option | Behavior |
-|---|---|
-| `size: { width, height }` | Logical raster viewport in pixels; defaults to the SVG image's intrinsic size reported by node-canvas. |
-| `select: { x, y, width, height }` | Crop in source-image pixels from the top-left, before applying `ratio`. Output dimensions come from the selection when supplied. |
-| `ratio` | Positive sampling multiplier, default `1`. Each output dimension is rounded up to a whole pixel. |
-| `background` | Canvas fill behind the SVG; transparent by default. |
-| `encoding` | PNG only: `'fast'` (default) uses compression level 3 without row filters; `'standard'` uses node-canvas's level 6 and adaptive filters. Both preserve every decoded pixel. |
-
-Node-canvas reports intrinsic image dimensions as whole pixels. When rendering
-a Gum fragment, pass `size: fragment.size` to retain its fractional viewport
-dimensions before applying `ratio`. This changes raster sampling and never runs
-layout. The SVG paths are rendered at the final resolution.
-
-Explicit viewports with a `viewBox` are loaded at their final raster dimensions,
-avoiding a second native render after loading. CSS-controlled sizing, XML
-preambles, and SVGs without an explicit viewBox use the native sizing path.
-Cropping also prepares the final viewport before loading when possible.
-
-Fast encoding reduces compression work. File size depends on the image: a fast
-PNG can be larger or smaller than standard encoding. Use `encoding: 'standard'`
-to retain the previous compression policy. `rasterize_pixels` skips PNG encoding
-and ignores this setting. The `PngEncoding` type is exported for callers.
-
-Selection coordinates describe the rendered SVG viewport, not its `viewBox`
-units. Fractional and negative positions are allowed; selection dimensions must
-be positive and all four values must be finite. Areas outside the source viewport
-are transparent or use the requested background. The source layout is unchanged.
-Cropping happens before rasterization, keeping magnified vector edges sharp.
-
-Browser renderers can import `select_svg(svg, select, viewport)` and the
-`RasterSelection` type from `@gum-jsx/png/selection`. This entry point has no Node
-or canvas dependencies and produces the same cropped SVG used by the native
-rasterizer; rasterize it at the desired output size using browser canvas.
+Browser applications can still import `select_svg(svg, select, viewport)` and
+`RasterSelection` from `@gum-jsx/png/selection` to wrap SVG markup in a cropped
+viewport. This helper does not rasterize the SVG or load a native dependency.
 
 PNG requires positive dimensions, even though SVG and layout inspection support
 zero-sized viewports. Invalid image data and nonpositive or nonfinite dimensions
@@ -147,12 +89,6 @@ Linux x64. Node 22+ is the supported Node baseline; other OSes still need releas
 verification. The module uses the portable `wasm32-unknown-unknown` target and
 does not require WASI or SIMD.
 
-The existing native SVG backend has been tested on Linux x64, macOS, and Windows
-with Bun 1.4.2 or newer. It requires node-canvas with its native binding and SVG support.
-
-Ordinary Gum text is already outlined in SVG and needs no font registration.
-Emoji and other live SVG text depend on fonts available to node-canvas.
-
 ## Development
 
 After `bun install` at the workspace root, run these commands in this package:
@@ -161,7 +97,7 @@ After `bun install` at the workspace root, run these commands in this package:
 bun run build        # JS and declarations, using the checked-in WASM artifact
 bun run test
 bun run typecheck
-bun run test:visual  # Ten comparisons with the existing SVG/canvas renderer
+bun run test:visual  # Ten comparisons with saved raster reference images
 bun run test:package # Clean npm install with scripts and native addons disabled
 bun run test:browser # Serve a browser check at http://127.0.0.1:4193
 bun run perf        # Workspace text and Silk Road benchmarks

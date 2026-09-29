@@ -7,7 +7,6 @@ import type { Fragment } from '@gum-jsx/core'
 import { create_evaluator } from '../../gum-jsx-cli/src/plugins'
 import { layout } from '../../gum-jsx-cli/src/render'
 import { render_png, render_pixels } from '../src/fragment'
-import { rasterize_svg, rasterize_pixels } from '../src/render'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const output = `${root}out/perf/`
@@ -26,10 +25,7 @@ for (const [name, fragment] of Object.entries(scenes)) {
   const svg = render_svg(fragment)
   const methods = {
     wasm_pixels: () => render_pixels(fragment),
-    canvas_pixels: () => rasterize_pixels(svg, { size: fragment.size }),
     wasm_png: () => render_png(fragment),
-    canvas_png: () => rasterize_svg(svg, { size: fragment.size }),
-    svg_then_canvas_png: () => rasterize_svg(render_svg(fragment), { size: fragment.size }),
   }
   const samples: Record<string, number[]> = Object.fromEntries(Object.keys(methods).map(key => [key, []]))
   for (const method of Object.values(methods)) method()
@@ -41,22 +37,18 @@ for (const [name, fragment] of Object.entries(scenes)) {
   }
   await Bun.write(`${output}${name}.json`, JSON.stringify(fragment))
   await Bun.write(`${output}${name}.svg`, svg)
-  const wasm = render_png(fragment), canvas = rasterize_svg(svg, { size: fragment.size })
+  const wasm = render_png(fragment)
   await Bun.write(`${output}${name}-wasm.png`, wasm)
-  await Bun.write(`${output}${name}-canvas.png`, canvas)
-  const cold: Record<string, number[]> = { wasm: [], canvas: [] }
-  for (let iteration = 0; iteration < 5; iteration++) for (const backend of ['wasm', 'canvas'] as const) {
-    const module = backend === 'wasm' ? `${root}dist/fragment.js` : `${root}dist/render.js`
-    const call = backend === 'wasm' ? 'render_png(fragment)' : 'rasterize_svg(svg, {size: fragment.size})'
-    const script = `import {${backend === 'wasm' ? 'render_png' : 'rasterize_svg'}} from ${JSON.stringify(module)};
+  const cold: Record<string, number[]> = { wasm: [] }
+  for (let iteration = 0; iteration < 5; iteration++) {
+    const script = `import {render_png} from ${JSON.stringify(root + 'dist/fragment.js')};
       const fragment=JSON.parse(await Bun.file(${JSON.stringify(output + name + '.json')}).text());
-      const svg=await Bun.file(${JSON.stringify(output + name + '.svg')}).text();
-      const start=performance.now(); const png=${call}; console.log(performance.now()-start);`
+      const start=performance.now(); const png=render_png(fragment); console.log(performance.now()-start);`
     const child = Bun.spawnSync([process.execPath, '-e', script])
     if (child.exitCode) throw new Error(child.stderr.toString())
-    cold[backend]!.push(Number(child.stdout.toString()))
+    cold.wasm!.push(Number(child.stdout.toString()))
   }
-  const row = { name, size: fragment.size, bytes: { wasm: wasm.length, canvas: canvas.length },
+  const row = { name, size: fragment.size, bytes: { wasm: wasm.length },
     median_ms: Object.fromEntries(Object.entries(samples).map(([key, values]) => [key, median(values)])),
     first_call_ms: Object.fromEntries(Object.entries(cold).map(([key, values]) => [key, median(values)])), samples, cold }
   results.push(row)

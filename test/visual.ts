@@ -6,10 +6,9 @@ import {
   draw_rect, draw_ellipse, draw_path, make_fragment, make_size, make_rect, make_clip,
   place_fragment, render_svg, LayoutPass, Text, Span, PngImage, px,
 } from '@gum-jsx/core'
-import { encode } from 'fast-png'
+import { encode, decode } from 'fast-png'
 import type { Drawing, Fragment, Paint, PathCommand, Transform } from '@gum-jsx/core'
 import { createMathFonts, mathToElement } from '@gum-jsx/math'
-import { rasterize_pixels, rasterize_svg } from '../src/render'
 import { render_png, render_pixels } from '../src/fragment'
 
 const output = fileURLToPath(new URL('../out/visual/', import.meta.url))
@@ -120,12 +119,12 @@ const fixtures: Record<string, Fragment> = {
 const results = []
 for (const [name, fragment] of Object.entries(fixtures)) {
   const svg = render_svg(fragment, { background: 'white' })
-  const reference = rasterize_pixels(svg, { ratio: 2 })
+  const reference = decode(await Bun.file(new URL(`./reference/${name}-canvas.png`, import.meta.url)).arrayBuffer())
   const actual = render_pixels(fragment, { ratio: 2, background: 'white' })
   assert.equal(actual.width, reference.width)
   assert.equal(actual.height, reference.height)
   await Bun.write(`${output}${name}-wasm.png`, render_png(fragment, { ratio: 2, background: 'white' }))
-  await Bun.write(`${output}${name}-canvas.png`, rasterize_svg(svg, { ratio: 2 }))
+  await Bun.write(`${output}${name}.svg`, svg)
   let total = 0, differing = 0
   for (let pixel = 0; pixel < actual.width * actual.height; pixel++) {
     let max = 0

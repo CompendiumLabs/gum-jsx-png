@@ -4,7 +4,7 @@ import { draw_rect, draw_path, draw_ellipse, draw_image, draw_text,
   make_fragment, place_fragment, LayoutPass, Text, px } from '@gum-jsx/core'
 import type { Drawing, Fragment, Paint, PathCommand } from '@gum-jsx/core'
 import { createMathFonts, mathToElement } from '@gum-jsx/math'
-import { render_png, render_pixels, has_live_text } from '../src/fragment'
+import { render_png, render_pixels } from '../src/fragment'
 import type { RasterPixels } from '../src/fragment'
 
 const style: Paint = { fill: 'red', stroke: 'none', stroke_width: 0 }
@@ -135,9 +135,7 @@ for (const fragment of [text, formula]) {
   assert.ok(render_png(fragment).length > 200)
 }
 const live = draw_text('hello', [0, 10], 20, { family: 'sans-serif', size: 12 }, { fill: 'black' }, null)
-assert.equal(has_live_text(text), false)
-assert.equal(has_live_text(formula), false)
-assert.equal(has_live_text(scene([], 8, 4, [place_fragment(scene([live]))])), true)
+assert.throws(() => render_png(scene([], 8, 4, [place_fragment(scene([live]))])), /cannot draw live text/)
 assert.throws(() => render_png(scene([live])), /cannot draw live text.*sans-serif/)
 console.log('ok - ordinary text and math outlines; descriptive live-text errors')
 
