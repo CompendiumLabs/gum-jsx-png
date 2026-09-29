@@ -9,7 +9,7 @@ import {
 import { encode, decode } from 'fast-png'
 import type { Drawing, Fragment, Paint, PathCommand, Transform } from '@gum-jsx/core'
 import { createMathFonts, mathToElement } from '@gum-jsx/math'
-import { render_png, render_pixels } from '../src/fragment'
+import { render_png, render_pixels } from '../src/render'
 
 const output = fileURLToPath(new URL('../out/visual/', import.meta.url))
 await mkdir(output, { recursive: true })

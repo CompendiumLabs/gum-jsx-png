@@ -6,7 +6,7 @@ import { render_svg, LayoutPass, Text, px } from '@gum-jsx/core'
 import type { Fragment } from '@gum-jsx/core'
 import { create_evaluator } from '../../gum-jsx-cli/src/plugins'
 import { layout } from '../../gum-jsx-cli/src/render'
-import { render_png, render_pixels } from '../src/fragment'
+import { render_png, render_pixels } from '../src/render'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const output = `${root}out/perf/`
@@ -41,7 +41,7 @@ for (const [name, fragment] of Object.entries(scenes)) {
   await Bun.write(`${output}${name}-wasm.png`, wasm)
   const cold: Record<string, number[]> = { wasm: [] }
   for (let iteration = 0; iteration < 5; iteration++) {
-    const script = `import {render_png} from ${JSON.stringify(root + 'dist/fragment.js')};
+    const script = `import {render_png} from ${JSON.stringify(root + 'dist/render.js')};
       const fragment=JSON.parse(await Bun.file(${JSON.stringify(output + name + '.json')}).text());
       const start=performance.now(); const png=render_png(fragment); console.log(performance.now()-start);`
     const child = Bun.spawnSync([process.execPath, '-e', script])

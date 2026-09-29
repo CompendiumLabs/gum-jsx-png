@@ -4,8 +4,8 @@ import { draw_rect, draw_path, draw_ellipse, draw_image, draw_text,
   make_fragment, place_fragment, LayoutPass, Text, px } from '@gum-jsx/core'
 import type { Drawing, Fragment, Paint, PathCommand } from '@gum-jsx/core'
 import { createMathFonts, mathToElement } from '@gum-jsx/math'
-import { render_png, render_pixels } from '../src/fragment'
-import type { RasterPixels } from '../src/fragment'
+import { render_png, render_pixels } from '../src/render'
+import type { RasterPixels } from '../src/render'
 
 const style: Paint = { fill: 'red', stroke: 'none', stroke_width: 0 }
 const rect = (x: number, y: number, width: number, height: number, paint: Partial<Paint> = {}) =>

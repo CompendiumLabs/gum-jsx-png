@@ -4,7 +4,7 @@
 <pre id="result">Loading renderer…</pre>
 <script type="module">
   try {
-    const { render_png, render_pixels } = await import('/fragment.js')
+    const { render_png, render_pixels } = await import('/render.js')
     const fragment = {
       size: { width: 16, height: 16 }, children: [],
       draw: [{ kind: 'rect', rect: { x: 0, y: 0, width: 8, height: 16 },
