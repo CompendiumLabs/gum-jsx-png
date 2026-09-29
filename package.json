@@ -1,28 +1,59 @@
 {
   "name": "@gum-jsx/png",
-  "description": "SVG rasterization for gum-jsx using node-canvas.",
+  "description": "Gum fragment rasterization with tiny-skia WebAssembly, plus optional SVG rendering.",
   "type": "module",
-  "module": "src/index.ts",
-  "types": "src/index.ts",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./selection": "./src/selection.ts"
+    ".": {
+      "browser": { "types": "./dist/fragment.d.ts", "default": "./dist/fragment.js" },
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./fragment": {
+      "types": "./dist/fragment.d.ts",
+      "default": "./dist/fragment.js"
+    },
+    "./svg": {
+      "types": "./dist/render.d.ts",
+      "default": "./dist/render.js"
+    },
+    "./selection": {
+      "types": "./dist/selection.d.ts",
+      "default": "./dist/selection.js"
+    }
   },
   "license": "MIT",
   "scripts": {
-    "test": "bun test/render.ts",
+    "build": "bun scripts/build.ts",
+    "build:wasm": "bun scripts/build-wasm.ts",
+    "prepack": "bun run build",
+    "test": "bun test/fragment.ts && bun test/render.ts",
+    "test:visual": "bun test/visual.ts",
+    "test:package": "bun test/package.ts",
+    "test:browser": "bun test/browser.ts",
+    "perf": "bun test/perf.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "canvas": "^3.2.3"
+    "@gum-jsx/core": "2.0.0-beta.2"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@gum-jsx/math": "2.0.0-beta.2",
+    "canvas": "^3.2.3",
+    "fast-png": "^8.0.0",
     "typescript": "^7"
   },
   "trustedDependencies": [
     "canvas"
   ],
+  "peerDependencies": {
+    "canvas": "^3.2.3"
+  },
+  "peerDependenciesMeta": {
+    "canvas": { "optional": true }
+  },
   "version": "2.0.0-beta.2",
   "repository": {
     "type": "git",
@@ -37,10 +68,13 @@
     "tag": "beta"
   },
   "engines": {
-    "bun": ">=1.4.2"
+    "bun": ">=1.4.2",
+    "node": ">=22"
   },
   "files": [
-    "src",
+    "dist",
+    "docs",
+    "THIRD_PARTY_NOTICES.md",
     "README.md",
     "LICENSE"
   ]

@@ -1,6 +1,7 @@
 // Adapted from gum-org/gum-jsx-node's node-canvas rasterizer.
-import { createCanvas, Image, Canvas } from 'canvas'
-import type { CanvasRenderingContext2D, ImageData } from 'canvas'
+import { createRequire } from 'node:module'
+import type { Canvas, CanvasRenderingContext2D } from 'canvas'
+import type { RasterPixels } from './fragment'
 import { select_svg, validate_selection } from './selection'
 import type { RasterSelection, RasterSize } from './selection'
 import { svg_viewport } from './viewport'
@@ -15,6 +16,17 @@ type RasterizeOptions = Readonly<{
   encoding?: PngEncoding
 }>
 type Raster = { canvas: Canvas; context: CanvasRenderingContext2D }
+const require = createRequire(import.meta.url)
+let native: typeof import('canvas') | undefined
+function native_canvas(): typeof import('canvas') {
+  if (!native) {
+    try { native = require('canvas') } catch (cause) {
+      throw new Error('SVG rasterization requires the optional canvas package and its native binding. '
+        + 'For Gum fragments, use render_png or render_pixels without canvas.', { cause })
+    }
+  }
+  return native!
+}
 
 function positive(value: number, name: string): number {
   if (!Number.isFinite(value) || value <= 0) {
@@ -26,6 +38,7 @@ function positive(value: number, name: string): number {
 // The caller can supply the layout size to retain fractional viewport dimensions.
 // Canvas reports an SVG image's intrinsic dimensions as whole pixels.
 function draw_svg(svg: string | Buffer, options: RasterizeOptions = {}): Raster {
+  const { Image, createCanvas } = native_canvas()
   const { size, select, background, ratio = 1 } = options
   positive(ratio, 'ratio')
   if (select) validate_selection(select)
@@ -73,10 +86,10 @@ function rasterize_svg(svg: string | Buffer, options: RasterizeOptions = {}): Bu
   const encoding = options.encoding ?? 'fast'
   if (encoding !== 'fast' && encoding !== 'standard') throw new TypeError('PNG encoding must be fast or standard')
   return draw_svg(svg, options).canvas.toBuffer('image/png', encoding === 'fast'
-    ? { compressionLevel: 3, filters: Canvas.PNG_FILTER_NONE } : undefined)
+    ? { compressionLevel: 3, filters: native_canvas().Canvas.PNG_FILTER_NONE } : undefined)
 }
 
-function rasterize_pixels(svg: string | Buffer, options: RasterizeOptions = {}): ImageData {
+function rasterize_pixels(svg: string | Buffer, options: RasterizeOptions = {}): RasterPixels {
   const { canvas, context } = draw_svg(svg, options)
   return context.getImageData(0, 0, canvas.width, canvas.height)
 }

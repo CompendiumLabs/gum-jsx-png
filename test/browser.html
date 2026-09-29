@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Gum PNG browser check</title>
+<pre id="result">Loading renderer…</pre>
+<script type="module">
+  try {
+    const { render_png, render_pixels } = await import('/fragment.js')
+    const fragment = {
+      size: { width: 16, height: 16 }, children: [],
+      draw: [{ kind: 'rect', rect: { x: 0, y: 0, width: 8, height: 16 },
+        fill: 'red', stroke: 'none', stroke_width: 0 }],
+    }
+    const pixels = render_pixels(fragment)
+    if (pixels.data[0] !== 255 || pixels.data[3] !== 255 || pixels.data[63] !== 0) throw Error('RGBA mismatch')
+    const image = new Image()
+    const url = URL.createObjectURL(new Blob([render_png(fragment)], { type: 'image/png' }))
+    image.src = url
+    await image.decode()
+    if (image.width !== 16 || image.height !== 16) throw Error('PNG dimensions mismatch')
+    document.body.append(image)
+    URL.revokeObjectURL(url)
+    document.querySelector('#result').textContent = 'PASS: browser fragment render, RGBA, PNG decode 16×16'
+  } catch (error) {
+    document.querySelector('#result').textContent = `FAIL: ${error.stack}`
+  }
+</script>
