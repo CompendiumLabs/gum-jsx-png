@@ -101,11 +101,9 @@ RGBA and both PNG encodings matched exactly. The updated WASM is 619,213 bytes.
   package. Node and Bun render it successfully with `--no-addons`, and its
   portable TypeScript declarations resolve in the consumer.
 - A browser ESM check renders RGBA and successfully decodes the generated PNG.
-- The workspace's `bun run test:png-package` packs CLI, MCP, and their local
-  dependencies, installs them through npm with `--ignore-scripts`, checks that
-  canvas is absent, and exercises PNG/kitty, Markdown math/figures, and MCP tools
-  with `--no-addons`. CLI raster output always outlines text; emoji report an
-  unsupported-input error.
+- `bun run --cwd gum-jsx-cli test` packs the CLI, installs it through npm
+  offline with `--ignore-scripts`, and checks built-in rendering under Node
+  and Bun plus plugins under Bun. The bundle has no runtime dependencies.
 - CLI checks cover crop/background pixels, fractional viewports, encoding,
   PNG/kitty agreement, outlined text modes, and unsupported emoji errors. Its live-text
   expectations follow core/math's live glyph behavior; PDF remains outlined.
