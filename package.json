@@ -24,15 +24,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@gum-jsx/core": "2.0.0-beta.3"
+    "@gum-jsx/core": "2.0.0-beta.4"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@gum-jsx/math": "2.0.0-beta.3",
+    "@gum-jsx/math": "2.0.0-beta.4",
     "fast-png": "^8.0.0",
     "typescript": "^7"
   },
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-beta.4",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CompendiumLabs/gum-jsx-png.git"
