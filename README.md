@@ -1,14 +1,13 @@
 # @gum-jsx/png
 
+[Gum](https://github.com/CompendiumLabs/gum-jsx) — installation, quickstart, and user documentation.
+
 Render completed Gum fragments directly to PNG or RGBA through tiny-skia
 WebAssembly. The fragment renderer works in Bun, Node, and browsers without
 native addons, install scripts, host fonts, or a Rust installation.
 
 CLI PNG/kitty output, Markdown figures/math, and MCP rasterization use fragments
 directly. This branch has no SVG-string rasterizer or native canvas dependency.
-
-See the [Gum project](https://github.com/CompendiumLabs/gum-jsx#readme) for
-getting started and the package overview.
 
 ## Fragment rendering
 
