@@ -13,12 +13,13 @@ Clip push/pop operations scope masks to the correct subtree. Rust owns input
 and output allocations; the wrapper copies the result and releases both in a
 `finally` block. Returned RGBA arrays remain valid across later renders.
 
-The release WASM binary is embedded as base64 in the JS entry point. This costs
+The release WASM binary is embedded as base64 in `src/generated/wasm.ts`. This costs
 about 33% before compression but avoids runtime asset loading, filesystem APIs,
 and an asynchronous initialization API. Compilation happens once, on demand.
-The Node root entry re-exports the same portable module, so importing both entry
-points shares the compiled instance. The module has no host imports or WASI
-dependency. Rust and Cargo run only when rebuilding that artifact.
+The package publishes TypeScript source with one portable entry point. Bun can
+import it directly; Node and browser consumers bundle it, as `gum-jsx` does for
+its commands. The module has no host imports or WASI dependency. Rust and Cargo
+run only when rebuilding that artifact.
 
 ## Historical comparison before removing canvas
 
@@ -45,7 +46,7 @@ tradeoff matters for single-shot CLI use; full CLI startup and memory still need
 cross-platform measurement. The two encoders use different fast-compression policies.
 
 The initial WASM artifact is 620,351 bytes (606 KiB); the compressed npm package
-is approximately 316 KiB, including JS, declarations, documentation, and licenses.
+was approximately 316 KiB with the former JS/declaration packaging.
 Run `bun run perf` for current WASM samples and rendered files in `out/perf/`.
 The canvas figures above are historical and are no longer measured by the script.
 
@@ -74,11 +75,10 @@ Backend order alternates. Both load built modules; layout and process startup
 are excluded. The embedded PNG is a generated RGB texture. These changes mainly
 help startup and images; warm vector rendering changes little.
 
-Pass a saved build to compare it with the current one:
+Pass a saved renderer module to compare it with the current source:
 
 ```sh
-bun run build
-bun run perf /path/to/previous/dist/render.js
+bun run perf /path/to/previous/src/index.ts
 ```
 
 The comparison also checks identical PNG bytes. Ten visual fixtures and all
@@ -98,8 +98,8 @@ RGBA and both PNG encodings matched exactly. The updated WASM is 619,213 bytes.
   under `test/reference/`; the tests need no native renderer. Artifacts are in
   `out/visual/`.
 - A fresh npm tarball installation with `--ignore-scripts` has no `canvas`
-  package. Node and Bun render it successfully with `--no-addons`, and its
-  portable TypeScript declarations resolve in the consumer.
+  package. Bun imports its source directly, a consumer bundle renders in Node,
+  and both run with `--no-addons`. Source types resolve in the consumer.
 - A browser ESM check renders RGBA and successfully decodes the generated PNG.
 - `bun run --cwd gum-jsx test` packs the CLI, installs it through npm
   offline with `--ignore-scripts`, and checks built-in rendering under Node

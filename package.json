@@ -2,23 +2,14 @@
   "name": "@gum-jsx/png",
   "description": "Gum fragment rasterization with tiny-skia WebAssembly.",
   "type": "module",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
   "exports": {
-    ".": {
-      "browser": {
-        "types": "./dist/render.d.ts",
-        "default": "./dist/render.js"
-      },
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+    ".": "./src/index.ts"
   },
   "license": "MIT",
   "scripts": {
-    "build": "bun scripts/build.ts",
-    "build:wasm": "bun scripts/build-wasm.ts",
-    "prepack": "bun run build",
+    "build": "bun scripts/build-wasm.ts",
     "test": "bun test/render.ts && bun test/visual.ts",
     "test:visual": "bun test/visual.ts",
     "test:package": "bun test/package.ts",
@@ -49,11 +40,10 @@
     "tag": "beta"
   },
   "engines": {
-    "bun": ">=1.4.2",
-    "node": ">=22"
+    "bun": ">=1.4.2"
   },
   "files": [
-    "dist",
+    "src",
     "docs",
     "THIRD_PARTY_NOTICES.md",
     "README.md",

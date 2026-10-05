@@ -14,9 +14,15 @@ function run(args: string[], cwd = root): string {
   assert.equal(result.exitCode, 0, `${args.join(' ')}\n${result.stderr.toString()}\n${result.stdout.toString()}`)
   return result.stdout.toString()
 }
-run(['bun', 'run', 'build'])
 const packed = JSON.parse(run(['npm', 'pack', '--ignore-scripts', '--pack-destination', directory, '--json']))
-const metadata = (Array.isArray(packed) ? packed[0] : Object.values(packed)[0]) as { filename: string; size: number }
+const metadata = (Array.isArray(packed) ? packed[0] : Object.values(packed)[0]) as {
+  filename: string; size: number; files: { path: string }[]
+}
+// Source and the checked-in WASM payload must ship without a build step.
+const files = metadata.files.map(file => file.path)
+assert.ok(files.includes('src/index.ts'))
+assert.ok(files.includes('src/generated/wasm.ts'))
+assert.ok(!files.some(file => file.startsWith('dist/')))
 // Pack the matching core candidate too: its version may not be public yet.
 const corePacked = JSON.parse(run(['npm', 'pack', '--ignore-scripts', '--pack-destination', directory, '--json'], join(root, '../gum-jsx-core')))
 const coreMetadata = (Array.isArray(corePacked) ? corePacked[0] : Object.values(corePacked)[0]) as { filename: string }
@@ -38,15 +44,17 @@ assert.ok(!('rasterize_svg' in api));
 assert.ok(!('rasterize_pixels' in api));
 console.log('ok - packed fragment renderer works without canvas or native addons');
 `
-await writeFile(join(consumer, 'smoke.mjs'), smoke)
+await writeFile(join(consumer, 'smoke.ts'), smoke)
+console.log(run(['bun', '--no-addons', 'smoke.ts'], consumer).trim())
+// Node consumers bundle the published source, as the gum-jsx distribution does.
+run(['bun', 'build', './smoke.ts', '--target=node', '--outfile=smoke.mjs'], consumer)
 console.log(run(['node', '--no-addons', 'smoke.mjs'], consumer).trim())
-console.log(run(['bun', '--no-addons', 'smoke.mjs'], consumer).trim())
-// Node 22 and older browsers use the decoder fallback, including at WASM startup.
-for (const runtime of ['node', 'bun']) {
+// Older runtimes use the decoder fallback, including at WASM startup.
+for (const [runtime, entry] of [['node', './smoke.mjs'], ['bun', './smoke.ts']]) {
   console.log(run([runtime, '--no-addons', '--input-type=module', '-e',
-    "Uint8Array.fromBase64 = undefined; await import('./smoke.mjs')"], consumer).trim())
+    `Uint8Array.fromBase64 = undefined; await import(${JSON.stringify(entry)})`], consumer).trim())
 }
-// Root declarations must resolve without native package types.
+// Published source types must resolve without native package types.
 await writeFile(join(consumer, 'types.ts'), `import {render_png, render_pixels} from '@gum-jsx/png';
 import type {RasterSelection} from '@gum-jsx/png';
 import type {Fragment} from '@gum-jsx/core';

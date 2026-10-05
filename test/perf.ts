@@ -1,6 +1,6 @@
-// Run from this workspace after `bun run build`. Uses the CLI's existing
+// Run directly from this workspace. Uses the CLI's existing
 // evaluator so the map fixture has exactly the same fonts, theme, and layout.
-// Optionally pass an older dist/render.js to compare output and alternating timings.
+// Optionally pass an older renderer module to compare output and alternating timings.
 import { mkdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
@@ -10,12 +10,12 @@ import type { Fragment } from '@gum-jsx/core'
 import { encode } from 'fast-png'
 import { create_evaluator } from '../../gum-jsx-cli/src/plugins'
 import { layout } from '../../gum-jsx-cli/src/render'
-import { render_png, render_pixels } from '../dist/render.js'
+import { render_png, render_pixels } from '../src'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const baseline = process.argv[2]
 const backends = {
-  wasm: { render_png, render_pixels, entry: `${root}dist/render.js` },
+  wasm: { render_png, render_pixels, entry: `${root}src/index.ts` },
   ...(baseline ? { baseline: { ...await import(resolve(baseline)), entry: resolve(baseline) } } : {}),
 }
 const output = `${root}out/perf/`

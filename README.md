@@ -3,8 +3,9 @@
 [Gum](https://github.com/CompendiumLabs/gum-jsx) — installation, quickstart, and user documentation.
 
 Render completed Gum fragments directly to PNG or RGBA through tiny-skia
-WebAssembly. The fragment renderer works in Bun, Node, and browsers without
-native addons, install scripts, host fonts, or a Rust installation.
+WebAssembly. Like the other Gum libraries, this package publishes TypeScript
+source. Use it directly in Bun or bundle it for Node and browsers. It needs no
+native addons, install scripts, host fonts, or Rust installation.
 
 CLI PNG/kitty output, Markdown figures/math, and MCP rasterization use fragments
 directly. This branch has no SVG-string rasterizer or native canvas dependency.
@@ -23,11 +24,11 @@ const rgba = render_pixels(fragment) // { width, height, data: Uint8ClampedArray
 await Bun.write('hello.png', png)
 ```
 
-The package root selects the portable renderer in browsers and never imports
-Node modules. To display the PNG, use `new Blob([png], { type: 'image/png' })`
-and an object URL.
+The package root exposes the same portable renderer in every environment and
+never imports Node modules. To display the PNG, use
+`new Blob([png], { type: 'image/png' })` and an object URL.
 
-The WASM payload is embedded in the published JavaScript. It is decoded and
+The WASM payload is embedded in `src/generated/wasm.ts`. It is decoded and
 compiled on the first render, then reused. There is no fetch or asset-loader
 configuration, and both APIs remain synchronous. Sites using CSP must permit
 WebAssembly compilation, for example with `script-src 'wasm-unsafe-eval'` in
@@ -81,17 +82,17 @@ throw errors.
 
 ## Runtime requirements
 
-The WASM backend has been checked with Bun 1.4.2, Node 26.9.0, and Chromium on
-Linux x64. Node 22+ is the supported Node baseline; other OSes still need release
-verification. The module uses the portable `wasm32-unknown-unknown` target and
-does not require WASI or SIMD.
+Use Bun 1.4.2+ for direct source imports. The bundled renderer has also been
+checked with Node 26.9.0 and Chromium on Linux x64; other OSes still need release
+verification. The `gum-jsx` command package bundles this library for its Node and
+standalone executables. The WASM module uses the portable
+`wasm32-unknown-unknown` target and does not require WASI or SIMD.
 
 ## Development
 
 After `bun install` at the workspace root, run these commands in this package:
 
 ```sh
-bun run build        # JS and declarations, using the checked-in WASM artifact
 bun run test
 bun run typecheck
 bun run test:visual  # Ten comparisons with saved raster reference images
@@ -100,12 +101,12 @@ bun run test:browser # Serve a browser check at http://127.0.0.1:4193
 bun run perf        # Workspace text and Silk Road benchmarks
 ```
 
-`npm pack` runs the JS build through `prepack`; it does not compile Rust. Build
-first when packing with `--ignore-scripts`. The npm tarball contains built JS,
-declarations, documentation, and licenses.
+`npm pack` ships TypeScript source, the checked-in WASM payload, documentation,
+and licenses. It needs no build step or lifecycle scripts. The package test
+checks direct source imports in Bun and a consumer bundle in Node.
 
 To rebuild the WASM artifact, install Rust and its `wasm32-unknown-unknown`
-target, then run `bun run build:wasm` followed by `bun run build`. The initial
-artifact was built with Rust 1.98.1. `wasm/Cargo.lock` pins Rust dependencies;
+target, then run `bun run build`. The initial artifact was built with Rust
+1.98.1. `wasm/Cargo.lock` pins Rust dependencies;
 the build script also refreshes their license notices. Commit the generated
 `src/generated/wasm.ts` so ordinary development and installation need no Rust.
