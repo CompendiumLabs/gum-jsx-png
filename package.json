@@ -40,6 +40,7 @@
     "tag": "beta"
   },
   "engines": {
+    "node": ">=24",
     "bun": ">=1.4.2"
   },
   "files": [

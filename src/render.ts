@@ -108,7 +108,9 @@ function prepare(fragment: Fragment, options: FragmentRasterOptions): { commands
     if (!Number.isFinite(opacity) || opacity < 0 || opacity > 1) throw new RangeError('opacity must be between 0 and 1')
     if (opacity === 0) return
     if (draw.kind === 'text') {
-      throw new TypeError(`PNG fragment output cannot draw live text in ${draw.font_family}: "${draw.text}". Use outlined text, or export SVG for emoji and text without outlines.`)
+      // Unsupported color glyphs keep their space in the layout.
+      if (draw.color_font !== false) return
+      throw new TypeError(`PNG fragment output cannot draw live text in ${draw.font_family}: "${draw.text}". Use outlined text, or export SVG for text without outlines.`)
     }
     if (draw.kind === 'image') {
       if (!draw.rect.width || !draw.rect.height) return

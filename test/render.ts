@@ -148,10 +148,33 @@ for (const fragment of [text, formula]) {
   assert.ok(image.data.some((value, index) => index % 4 === 3 && value > 0))
   assert.ok(render_png(fragment).length > 200)
 }
-const live = draw_text('hello', [0, 10], 20, { family: 'sans-serif', size: 12 }, { fill: 'black' }, null)
+const live = draw_text('hello', [0, 10], 20,
+  { family: 'sans-serif', size: 12, color: false }, { fill: 'black' }, null)
 assert.throws(() => render_png(scene([], 8, 4, [place_fragment(scene([live]))])), /cannot draw live text/)
 assert.throws(() => render_png(scene([live])), /cannot draw live text.*sans-serif/)
 console.log('ok - ordinary text and math outlines; descriptive live-text errors')
+
+// Remove only live drawings from a laid-out tree, preserving spacing and placement.
+function without_emoji(fragment: Fragment): Fragment {
+  return make_fragment({ ...fragment,
+    draw: fragment.draw.filter(draw => draw.kind !== 'text'),
+    children: fragment.children.map(child => ({ ...child, fragment: without_emoji(child.fragment) })),
+  })
+}
+const emoji = new LayoutPass().layout(new Text({ children: '😀', font_size: px(20) }))
+assert.ok(render_pixels(emoji).data.every(value => value === 0))
+const greeting = new LayoutPass().layout(new Text({ children: 'Hello 😀 world', font_size: px(20) }))
+const placed = scene([rect(0, 0, 4, 4)], 400, 60, [place_fragment(greeting, [8, 4], [2, 0, 0, 2, 0, 0])])
+const outlines = without_emoji(placed)
+assert.deepEqual(render_pixels(placed), render_pixels(outlines))
+for (const encoding of ['fast', 'standard'] as const) {
+  assert.deepEqual(render_png(placed, { encoding }), render_png(outlines, { encoding }))
+}
+assert.ok(render_pixels(greeting).data.some((value, index) => index % 4 === 3 && value > 0))
+const color = draw_text('😀', [0, 10], 20,
+  { family: 'Custom Emoji', size: 12, color: true }, { fill: 'black' }, null)
+assert.deepEqual(render_pixels(scene([color, ...basic.draw])), pixels)
+console.log('ok - live emoji are skipped while outlined text, layout, and other drawings are preserved')
 
 for (const ratio of [0, -1, NaN, Infinity]) assert.throws(() => render_png(basic, { ratio }), /ratio/)
 assert.throws(() => render_png(basic, { ratio: 10000 }), /16777216/)

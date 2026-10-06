@@ -5,8 +5,9 @@ the tree, combines affine placements, normalizes shapes to paths, parses colors,
 and writes one binary command buffer. Rust executes that buffer with tiny-skia
 0.12.0 and encodes PNG with the `png` crate. Neither side performs layout or
 font loading. CLI PNG/kitty output, Markdown figures/math, and MCP rasterization
-now pass fragments directly. The native SVG backend has been removed. Live text,
-emoji without outlines, and external SVG images are unsupported by this backend.
+now pass fragments directly. The native SVG backend has been removed. Live emoji
+without outlines are skipped, preserving their layout space. Other live text
+and external SVG images are unsupported by this backend.
 
 The protocol defines paths and embedded PNGs once, then refers to them by index.
 Clip push/pop operations scope masks to the correct subtree. Rust owns input
@@ -105,7 +106,7 @@ RGBA and both PNG encodings matched exactly. The updated WASM is 619,213 bytes.
   offline with `--ignore-scripts`, and checks built-in rendering under Node
   and Bun plus plugins under Bun. The bundle has no runtime dependencies.
 - CLI checks cover crop/background pixels, fractional viewports, encoding,
-  PNG/kitty agreement, outlined text modes, and unsupported emoji errors. Its live-text
+  PNG/kitty agreement, outlined text modes, and skipped live emoji. Its live-text
   expectations follow core/math's live glyph behavior; PDF remains outlined.
 
 ## Remaining work

@@ -50,8 +50,9 @@ Shared path and image data are transferred to WASM once per render.
 
 The current implementation has these limits:
 
-- Live text and emoji without outlines throw a descriptive error. Use outlined
-  text, or export SVG for a browser with suitable fonts.
+- Live emoji without outlines are skipped, preserving their layout space.
+  Other live text throws a descriptive error; use outlined text. Export SVG
+  for a browser with suitable fonts to display live text and emoji.
 - Colors support CSS names, hex, numeric RGB/HSL, `transparent`, and `none`.
   CSS variables, `currentColor`, gradients, and other paint expressions throw.
 - Images use bilinear sampling and 8-bit premultiplied RGBA internally. PNG
@@ -70,8 +71,9 @@ performance results and remaining portability and performance work.
 
 The former `rasterize_svg`, `rasterize_pixels`, and `/svg` entry point have been
 removed. Pass a completed Gum `Fragment` to `render_png` or `render_pixels`.
-Live text and emoji without outlines are unsupported. Export those figures as
-SVG for a browser or another renderer with suitable fonts.
+Live emoji without outlines are skipped; other live text requires outlines.
+Export SVG for a browser or another renderer with suitable fonts to display
+live text and emoji.
 
 For cropped PNG or RGBA output, pass `select` to the fragment renderer.
 The `RasterSelection` type is exported from the package root.
