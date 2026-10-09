@@ -1,4 +1,5 @@
-import type { Drawing, Fragment, PathCommand, Transform } from '@gum-jsx/core'
+import { draw_path, transform_path } from '@gum-jsx/core'
+import type { Drawing, Fragment, PathCommand, PixelRect, Transform } from '@gum-jsx/core'
 import { parse_color } from './color'
 import type { Color } from './color'
 import { rect_path, ellipse_path } from './paths'
@@ -173,6 +174,35 @@ function prepare(fragment: Fragment, options: FragmentRasterOptions): { commands
     if (node.clip_path) commands.byte(4)
     if (node.clip) commands.byte(4)
   }
+
+  // Transform diagnostic geometry before stroking so fitting never scales the
+  // stroke or dash pattern. Only the output sampling ratio affects their widths.
+  function debug_box(rect: PixelRect, content: boolean, transform: Transform): void {
+    const { x, y, width, height } = rect
+    const empty = width === 0 || height === 0
+    const path: readonly PathCommand[] = empty
+      ? [{ kind: 'M', x, y }, { kind: 'L', x: x + width, y: y + height }]
+      : rect_path(rect)
+    draw(draw_path(transform_path(path, transform), {
+      fill: 'none', stroke: content ? '#2563eb' : '#e11d48', stroke_width: ratio,
+      stroke_dasharray: content ? [4 * ratio, 3 * ratio] : [],
+      stroke_linecap: empty ? 'round' : 'butt',
+    }), IDENTITY)
+  }
+
+  // A separate overlay pass stays above sibling paint and outside all content
+  // clips, including empty clips whose children were skipped by the paint pass.
+  function visit_debug(node: Fragment, transform: Transform): void {
+    if (node.debug) {
+      debug_box({ x: 0, y: 0, ...node.size }, false, transform)
+      if (node.content) debug_box(node.content, true, transform)
+    }
+    for (const child of node.children) {
+      const [a, b, c, d, e, f] = child.transform ?? IDENTITY
+      visit_debug(child.fragment, multiply(transform, [a, b, c, d, e + child.offset.x, f + child.offset.y]))
+    }
+  }
+
   if (options.background !== undefined) draw({ kind: 'rect', rect: { x: 0, y: 0, width, height },
     fill: options.background, stroke: 'none', stroke_width: 0 }, IDENTITY)
   const transform: Transform = [ratio, 0, 0, ratio, -(select?.x ?? 0) * ratio, -(select?.y ?? 0) * ratio]
@@ -180,6 +210,7 @@ function prepare(fragment: Fragment, options: FragmentRasterOptions): { commands
   // region outside it. Pixel rounding adds a partial last pixel, never stretches.
   clip(rect_path({ x: 0, y: 0, ...fragment.size }), transform)
   visit(fragment, transform)
+  visit_debug(fragment, transform)
   commands.byte(4)
   return { commands: commands.finish(), width, height }
 }

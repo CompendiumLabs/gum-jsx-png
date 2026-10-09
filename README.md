@@ -48,6 +48,12 @@ drawing opacity. Text and math are rendered from their existing glyph outlines.
 Fill and stroke are composited together before applying drawing opacity.
 Shared path and image data are transferred to WASM once per render.
 
+Elements marked `debug` show their allocated box in solid red and their content
+box, when available, in dashed blue. These overlays follow placement transforms,
+retain their stroke width through fitting, and appear above artwork outside
+content clips. The viewport and selected crop still clip them. They do not change
+layout or ink bounds, and also appear in CLI PNG and terminal output.
+
 The current implementation has these limits:
 
 - Live emoji without outlines are skipped, preserving their layout space.
@@ -61,8 +67,8 @@ The current implementation has these limits:
 - Each output and embedded image is limited to 16,777,216 pixels; nested clip
   masks are limited to 128 MiB. Transparent fill/stroke composites currently
   allocate a temporary surface the size of the output.
-- Debug overlays and fragment labels are not drawn. Path coordinates enter
-  tiny-skia as float32; exceptionally large coordinates can lose precision.
+- Fragment labels are not drawn. Path coordinates enter tiny-skia as float32;
+  exceptionally large coordinates can lose precision.
 
 See [WASM implementation and measurements](docs/WASM.md) for the initial
 performance results and remaining portability and performance work.
