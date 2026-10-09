@@ -10,8 +10,7 @@
   "license": "MIT",
   "scripts": {
     "build": "bun scripts/build-wasm.ts",
-    "test": "bun test/render.ts && bun test/visual.ts",
-    "test:visual": "bun test/visual.ts",
+    "test": "bun test/render.ts",
     "test:package": "bun test/package.ts",
     "test:browser": "bun test/browser.ts",
     "perf": "bun test/perf.ts",

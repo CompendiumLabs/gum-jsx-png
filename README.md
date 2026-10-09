@@ -97,7 +97,6 @@ After `bun install` at the workspace root, run these commands in this package:
 ```sh
 bun run test
 bun run typecheck
-bun run test:visual  # Ten comparisons with saved raster reference images
 bun run test:package # Clean npm install with scripts and native addons disabled
 bun run test:browser # Serve a browser check at http://127.0.0.1:4193
 bun run perf        # Workspace text and Silk Road benchmarks

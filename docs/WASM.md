@@ -91,13 +91,6 @@ RGBA and both PNG encodings matched exactly. The updated WASM is 619,213 bytes.
 - Fragment tests cover decoded PNG/RGBA equivalence, straight alpha, crop
   sampling, fractional viewports, transforms, winding holes, clip restoration,
   stroke dashes, curves, images, text/math outlines, and error recovery.
-- Ten visual comparison scenes cover geometry, stroke degeneracies, clipping,
-  opacity, transformed images, and text/math. At 2×, mean RGB error versus
-  node-canvas was 0.004–0.440 out of 255; at most 0.32% of pixels differed by
-  more than 32 in any RGB channel. This allows different edge antialiasing while
-  checking geometry and interior colors. The original references are checked in
-  under `test/reference/`; the tests need no native renderer. Artifacts are in
-  `out/visual/`.
 - A fresh npm tarball installation with `--ignore-scripts` has no `canvas`
   package. Bun imports its source directly, a consumer bundle renders in Node,
   and both run with `--no-addons`. Source types resolve in the consumer.

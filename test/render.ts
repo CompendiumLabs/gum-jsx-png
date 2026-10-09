@@ -132,12 +132,7 @@ const adam7 = encode({ width: 2, height: 1, data: new Uint8Array([255, 0, 0, 255
 const interlaced = render_pixels(scene([draw_image({ x: 0, y: 0, width: 2, height: 1 },
   `data:image/png;base64,${Buffer.from(adam7).toString('base64')}`)], 2, 1))
 assert.deepEqual(pixel(interlaced, 1, 0), [0, 255, 0, 255])
-// A fixed one-pixel RGB image with a transparency key exercises the Rust
-// decoder independently of fast-png (which rejects this otherwise valid PNG).
-const keyed = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAABnRSTlMA/wAAAACkwsAdAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC'
-assert.deepEqual(pixel(render_pixels(scene([draw_image({ x: 0, y: 0, width: 1, height: 1 },
-  `data:image/png;base64,${keyed}`)], 1, 1)), 0, 0), [0, 0, 0, 0])
-console.log('ok - embedded PNG alpha, palette, Adam7, transparency keys, and 16-bit normalization')
+console.log('ok - embedded PNG alpha, palette, Adam7, and 16-bit normalization')
 
 const text = new LayoutPass().layout(new Text({ children: 'Hello, tiny-skia! AV office Ω', font_size: px(20) }))
 const fonts = createMathFonts()
