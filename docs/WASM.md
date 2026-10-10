@@ -101,13 +101,14 @@ RGBA and both PNG encodings matched exactly. The updated WASM is 619,213 bytes.
 - CLI checks cover crop/background pixels, fractional viewports, encoding,
   PNG/kitty agreement, outlined text modes, and skipped live emoji. Its live-text
   expectations follow core/math's live glyph behavior; PDF remains outlined.
+- Release testing covers Linux x64, with successful native macOS and Windows
+  testing of `gum-jsx` 2.1.0-beta.1 confirmed by Doug on 2026-10-09.
 
 ## Remaining work
 
 1. Measure full CLI startup and memory on supported platforms with Bun;
    investigate cold WASM performance and optional SIMD builds if justified.
-2. Verify fresh CLI installations on macOS and Windows. Linux x64 is checked.
-3. Bound temporary opacity surfaces to drawing extents and reduce full-frame
+2. Bound temporary opacity surfaces to drawing extents and reduce full-frame
    clip-mask allocation for large or deeply clipped figures.
-4. Verify image minification and color expectations on real documents. Bilinear
+3. Verify image minification and color expectations on real documents. Bilinear
    sampling and 8-bit sRGB-like samples are the current scope; profiles are ignored.

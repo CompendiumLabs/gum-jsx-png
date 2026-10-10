@@ -91,8 +91,9 @@ throw errors.
 ## Runtime requirements
 
 Use Bun 1.4.2+ for direct source imports. The bundled renderer has also been
-checked with Node 26.9.0 and Chromium on Linux x64; other OSes still need release
-verification. The `gum-jsx` command package bundles this library for its Node and
+checked with Node 26.9.0 and Chromium on Linux x64. Doug confirmed successful
+native macOS and Windows testing of `gum-jsx` 2.1.0-beta.1 on 2026-10-09.
+The `gum-jsx` command package bundles this library for its Node and
 standalone executables. The WASM module uses the portable
 `wasm32-unknown-unknown` target and does not require WASI or SIMD.
 
